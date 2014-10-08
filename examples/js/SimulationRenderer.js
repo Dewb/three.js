@@ -74,9 +74,7 @@ function SimulationRenderer(WIDTH, renderer) {
 			alignmentDistance: { type: "f", value: 1.0 },
 			cohesionDistance: { type: "f", value: 1.0 },
 			freedomFactor: { type: "f", value: 1.0 },
-			predator1: { type: "v3", value: new THREE.Vector3() },
-			predator2: { type: "v3", value: new THREE.Vector3() },
-			predator3: { type: "v3", value: new THREE.Vector3() }
+			predator: { type: "v3", value: new THREE.Vector3() }
 		},
 		defines: {
 			WIDTH: WIDTH.toFixed(2)

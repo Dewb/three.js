@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
 			body {
-				background-color: #000000;
+				background-color: #ffffff;
 				margin: 0px;
 				overflow: hidden;
 				font-family:Monospace;
@@ -31,7 +31,7 @@
 	</head>
 	<body>
 
-		<div id="info" style="display:none;">
+		<div id="info">
 			<a href="http://threejs.org" target="_blank">three.js</a> - <span id="birds"></span> webgl gpgpu birds<br/>
 			Select <span id="options"></span> birds<br/>
 			Move mouse to disturb birds.
@@ -44,7 +44,6 @@
 		<script src="js/libs/dat.gui.min.js"></script>
 
 		<script src="js/SimulationRenderer.js"></script>
-		<script src="js/loaders/OBJLoader.js"></script>
 
 		<!--
 		TODO: If you're reading this, you may wish to improve this example by
@@ -53,7 +52,6 @@
 
 		-->
 
-		<script src="http://127.0.0.1:8081/socket.io/socket.io.js"></script>
 
 
 		<!-- pass through vertex shader -->
@@ -126,9 +124,7 @@
 			uniform float alignmentDistance; // 40
 			uniform float cohesionDistance; //
 			uniform float freedomFactor;
-			uniform vec3 predator1;
-			uniform vec3 predator2;
-			uniform vec3 predator3;
+			uniform vec3 predator;
 
 
 			uniform sampler2D textureVelocity;
@@ -184,16 +180,17 @@
 
 				float limit = SPEED_LIMIT;
 
+				dir = predator * UPPER_BOUNDS - selfPosition;
+				dir.z = 0.;
+				// dir.z *= 0.6;
+				dist = length( dir );
+				distSquared = dist * dist;
+
 				float preyRadius = 150.0;
 				float preyRadiusSq = preyRadius * preyRadius;
 
-				// move birds away from predators
 
-				dir = predator1 - selfPosition;
-				dir.z = 0.;
-				dist = length( dir );
-				distSquared = dist * dist;
-
+				// move birds away from predator
 				if (dist < preyRadius) {
 
 					f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
@@ -201,29 +198,6 @@
 					limit += 5.0;
 				}
 
-				dir = predator2 - selfPosition;
-				dir.z = 0.;
-				dist = length( dir );
-				distSquared = dist * dist;
-
-				if (dist < preyRadius) {
-
-					f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-					velocity += normalize( dir ) * f;
-					limit += 5.0;
-				}
-
-				dir = predator3 - selfPosition;
-				dir.z = 0.;
-				dist = length( dir );
-				distSquared = dist * dist;
-
-				if (dist < preyRadius) {
-
-					f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-					velocity += normalize( dir ) * f;
-					limit += 5.0;
-				}
 
 				// if (testing == 0.0) {}
 				// if ( rand( uv + time ) < freedomFactor ) {}
@@ -380,7 +354,7 @@
 
 			void main() {
 				// Fake colors for now
-				float z2 = 0.4 + ( 1000. - z ) / 1000. * vColor.x;
+				float z2 = 0.2 + ( 1000. - z ) / 1000. * vColor.x;
 				gl_FragColor = vec4( z2, z2, z2, 1. );
 
 			}
@@ -494,7 +468,6 @@
 
 			var PARTICLES = WIDTH * WIDTH;
 			var BOUNDS = 800, BOUNDS_HALF = BOUNDS / 2;
-			var NUM_PREDATORS = 3;
 
 			document.getElementById('birds').innerText = PARTICLES;
 
@@ -529,7 +502,7 @@
 
 				scene = new THREE.Scene();
 
-				scene.fog = new THREE.Fog( 0x000000, 100, 1000 );
+				scene.fog = new THREE.Fog( 0xffffff, 100, 1000 );
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
@@ -542,7 +515,6 @@
 				stats = new Stats();
 				stats.domElement.style.position = 'absolute';
 				stats.domElement.style.top = '0px';
-				stats.domElement.style.display = "none";
 				container.appendChild( stats.domElement );
 
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -583,78 +555,7 @@
 				gui.close();
 
 				initBirds();
-				initPredators();
-			}
 
-			function initPredators() {
-				window.predators = [];
-
-				var colors = [
-					0xff0000,
-					0x00ff00,
-					0x0000ff
-				];
-
-				var ambient = new THREE.AmbientLight( 0x506090 );
-				scene.add( ambient );
-
-				var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
-
-					console.log( item, loaded, total );
-
-				};
-
-				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'obj/Space_Invader.obj', function ( object ) {
-					object.traverse( function ( child ) {
-						if ( child instanceof THREE.Mesh ) {
-							child.material = new THREE.MeshBasicMaterial( { color: colors[0] } );
-						}
-					});
-					object.scale.x = object.scale.y = 0.5;
-					object.scale.z = 0.05;
-					object.updateMatrix();
-					scene.add(object);
-					predators.push(object);
-
-				});
-				loader.load( 'obj/Space_Invader.obj', function ( object ) {
-					object.traverse( function ( child ) {
-						if ( child instanceof THREE.Mesh ) {
-							child.material = new THREE.MeshBasicMaterial( { color: colors[1] } );
-						}
-					});
-					object.scale.x = object.scale.y = 0.5;
-					object.scale.z = 0.05;
-					object.updateMatrix();
-					scene.add(object);
-					predators.push(object);
-
-				});
-				loader.load( 'obj/Space_Invader.obj', function ( object ) {
-					object.traverse( function ( child ) {
-						if ( child instanceof THREE.Mesh ) {
-							child.material = new THREE.MeshBasicMaterial( { color: colors[2] } );
-						}
-					});
-					object.scale.x = object.scale.y = 0.5;
-					object.scale.z = 0.05;
-					object.updateMatrix();
-					scene.add(object);
-					predators.push(object);
-
-				});
-
-				/*
-				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
-
-				for (var ii = 0; ii < NUM_PREDATORS; ii++) {
-					var predatorObj = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colors[ii % colors.length]} ) );
-					scene.add(predatorObj);
-					window.predators.push(predatorObj);
-				}
-				*/
 			}
 
 
@@ -771,64 +672,15 @@
 				birdUniforms.delta.value = delta;
 
 				simulator.simulate( delta );
+				simulator.velocityUniforms.predator.value.set( mouseX / windowHalfX, -mouseY / windowHalfY, 0 );
 
-				if (window.predators.length == NUM_PREDATORS) {
-					var p = window.predators[0].position;
-					simulator.velocityUniforms.predator1.value.set(p.x, p.y, p.z);
-					var p = window.predators[1].position;
-					simulator.velocityUniforms.predator2.value.set(p.x, p.y, p.z);
-					var p = window.predators[2].position;
-					simulator.velocityUniforms.predator3.value.set(p.x, p.y, p.z);
-				}
-
-				//mouseX = 10000;
-				//mouseY = 10000;
+				mouseX = 10000;
+				mouseY = 10000;
 
 				renderer.render( scene, camera );
 
 			}
 
-
-function clamp(s, in_min, in_max, out_min, out_max) {
-	if (s < in_min) return out_min;
-	if (s > in_max) return out_max;
-	return (s - in_min) / (in_max - in_min) * (out_max - out_min) + out_min;
-}
-
-
-   socket = io.connect('http://127.0.0.1', { port: 8081, rememberTransport: false});
-   console.log('oi');
-   socket.on('connect', function() {
-        // sends to socket.io server the host/port of oscServer
-        // and oscClient
-        socket.emit('config',
-            {
-                server: {
-                    port: 6000,
-                    host: '127.0.0.1'
-                },
-                client: {
-                    port: 3334,
-                    host: '127.0.0.1'
-                }
-            }
-        );
-    });
-
-    socket.on('message', function(obj) {
-        var status = document.getElementById("status");
-        //status.innerHTML = obj[0];
-        var addr = obj[0].split('/');
-        if (addr[1] == "orient") {
-        	var user = addr[2];
-        	if (user >= 1 && user <= NUM_PREDATORS) {
-		        window.predators[user-1].position.x = clamp(obj[3], -45, 45, -400, 400);
-		        window.predators[user-1].position.y = clamp(obj[2], -45, 45, -400, 400);
-		    }
-		}
-        //console.log([mouseX, mouseY]);
-    });
-</script>
-
+		</script>
 	</body>
 </html>
