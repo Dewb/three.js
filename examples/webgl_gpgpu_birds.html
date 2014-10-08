@@ -516,6 +516,8 @@
 
 			var simulator;
 
+			var clock = new THREE.Clock();
+
 			init();
 			animate();
 
@@ -586,6 +588,48 @@
 				initPredators();
 			}
 
+			function morphColorsToFaceColors( geometry ) {
+
+				if ( geometry.morphColors && geometry.morphColors.length ) {
+
+					var colorMap = geometry.morphColors[ 0 ];
+
+					for ( var i = 0; i < colorMap.colors.length; i ++ ) {
+
+						geometry.faces[ i ].color = colorMap.colors[ i ];
+						geometry.faces[ i ].color.offsetHSL( 0, 0.3, 0 );
+
+					}
+
+				}
+
+			}
+
+
+			function loadPredatorModel(callback) {
+
+
+				var loader = new THREE.JSONLoader();
+
+				loader.load( "models/animated/flamingo.js", function( geometry ) {
+
+					morphColorsToFaceColors( geometry );
+					geometry.computeMorphNormals();
+
+					var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 20, morphTargets: true, morphNormals: true, vertexColors: THREE.FaceColors, shading: THREE.SmoothShading } );
+					var meshAnim = new THREE.MorphAnimMesh( geometry, material );
+
+					meshAnim.duration = 1000;
+
+					meshAnim.scale.set( 0.35, 0.35, 0.35 );
+					//meshAnim.position.y = 150;
+
+					callback(meshAnim);
+
+				} );
+
+			}
+
 			function initPredators() {
 				window.predators = [];
 
@@ -598,6 +642,29 @@
 				var ambient = new THREE.AmbientLight( 0x506090 );
 				scene.add( ambient );
 
+				var light = new THREE.DirectionalLight( 0xffffff, 1.3 );
+				light.position.set( 1, 1, 1 );
+				scene.add( light );
+
+				var light = new THREE.DirectionalLight( 0xffffff, 0.1 );
+				light.position.set( 0.25, -1, 0 );
+				scene.add( light );
+
+
+				loadPredatorModel(function(obj) {
+					predators.push(obj);
+					scene.add(obj);
+				});
+				loadPredatorModel(function(obj) {
+					predators.push(obj);
+					scene.add(obj);
+				});
+				loadPredatorModel(function(obj) {
+					predators.push(obj);
+					scene.add(obj);
+				});
+
+/*
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
 
@@ -645,16 +712,22 @@
 					predators.push(object);
 
 				});
-
+*/
 				/*
-				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
+				//var geometry = new THREE.SphereGeometry( 20, 20, 20 );
+
+				//var geometry = new THREE.BirdGeometry();
 
 				for (var ii = 0; ii < NUM_PREDATORS; ii++) {
 					var predatorObj = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colors[ii % colors.length]} ) );
+					//predatorObj.scale.x = predatorObj.scale.y = predatorObj.scale.z = 100.0;
+					//predatorObj.updateMatrix();
 					scene.add(predatorObj);
 					window.predators.push(predatorObj);
 				}
+
 				*/
+				
 			}
 
 
@@ -781,6 +854,13 @@
 					simulator.velocityUniforms.predator3.value.set(p.x, p.y, p.z);
 				}
 
+				var delta = clock.getDelta();
+
+				for (var i = 0; i < window.predators.length; i++) {
+					predators[i].updateAnimation( 1000 * delta );
+				}
+
+
 				//mouseX = 10000;
 				//mouseY = 10000;
 
@@ -824,6 +904,8 @@ function clamp(s, in_min, in_max, out_min, out_max) {
         	if (user >= 1 && user <= NUM_PREDATORS) {
 		        window.predators[user-1].position.x = clamp(obj[3], -45, 45, -400, 400);
 		        window.predators[user-1].position.y = clamp(obj[2], -45, 45, -400, 400);
+
+		        window.predators[user-1].rotation.set(0, clamp(obj[3], -45, 45, -Math.PI/2, Math.PI/2), 0);
 		    }
 		}
         //console.log([mouseX, mouseY]);
