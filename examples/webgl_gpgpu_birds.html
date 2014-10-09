@@ -615,6 +615,7 @@
 
 			function initPredators() {
 				window.predators = [];
+				window.predatorTimeouts = [];
 
 				var colors = [
 					0xff0000,
@@ -636,6 +637,7 @@
 				var loader = new THREE.JSONLoader();
 
 				for (var i = 0; i < NUM_PREDATORS; i++) {
+					window.predatorTimeouts.push(-99999999);
 					loadPredatorModel(loader, function(obj) {
 						obj.visible = false;
 						predators.push(obj);
@@ -760,6 +762,15 @@
 				simulator.simulate( delta );
 
 				for (var i = 0; i < window.predators.length; i++) {
+
+					if (window.predatorTimeouts[i] < now - 10000) {
+		        		window.predators[i].visible = false;
+		        		window.simulator.velocityUniforms.predatorActive.value[i] = 0.0;
+		        	} else {
+		        		window.predators[i].visible = true;
+		        		window.simulator.velocityUniforms.predatorActive.value[i] = 1.0;
+		        	}
+
 					window.predators[i].updateAnimation( 1000 * delta );
 					var p = window.predators[i].position;
 					simulator.velocityUniforms.predators.value[i].set(p.x, p.y, p.z);
@@ -809,9 +820,8 @@ function clamp(s, in_min, in_max, out_min, out_max) {
         	var user = addr[2];
         	if (user >= 1 && user <= NUM_PREDATORS) {
 
-        		window.simulator.velocityUniforms.predatorActive.value[user-1] = 1.0;
+        		window.predatorTimeouts[user-1] = performance.now();
 
-        		window.predators[user-1].visible = true;
 
 		        window.predators[user-1].position.x = clamp(obj[3], -45, 45, -400, 400);
 		        window.predators[user-1].position.y = clamp(obj[2], -45, 45, -400, 400);
