@@ -74,12 +74,11 @@ function SimulationRenderer(WIDTH, renderer) {
 			alignmentDistance: { type: "f", value: 1.0 },
 			cohesionDistance: { type: "f", value: 1.0 },
 			freedomFactor: { type: "f", value: 1.0 },
-			predator1active: { type: "f", value: 0.0 },
-			predator2active: { type: "f", value: 0.0 },
-			predator3active: { type: "f", value: 0.0 },
-			predator1: { type: "v3", value: new THREE.Vector3() },
-			predator2: { type: "v3", value: new THREE.Vector3() },
-			predator3: { type: "v3", value: new THREE.Vector3() }
+			predatorActive: { type: "fv1", value: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
+			predators: { type: "v3v", value: [ new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(),
+			 new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(),
+			 new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(),
+			 new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3() ] }
 		},
 		defines: {
 			WIDTH: WIDTH.toFixed(2)

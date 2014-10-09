@@ -122,6 +122,8 @@
 		<!-- shader for bird's velocity -->
 		<script id="fragmentShaderVelocity" type="x-shader/x-fragment">
 
+			const int NUM_PREDATORS = 20;
+
 			uniform vec2 resolution;
 			uniform float time;
 			uniform float testing;
@@ -130,13 +132,8 @@
 			uniform float alignmentDistance; // 40
 			uniform float cohesionDistance; //
 			uniform float freedomFactor;
-			uniform float predator1active;
-			uniform float predator2active;
-			uniform float predator3active;
-			uniform vec3 predator1;
-			uniform vec3 predator2;
-			uniform vec3 predator3;
-
+			uniform float predatorActive[NUM_PREDATORS];
+			uniform vec3 predators[NUM_PREDATORS];
 
 			uniform sampler2D textureVelocity;
 			uniform sampler2D texturePosition;
@@ -196,45 +193,19 @@
 
 				// move birds away from predators
 
-				if (predator1active == 1.0) {
-					dir = predator1 - selfPosition;
-					dir.z = 0.;
-					dist = length( dir );
-					distSquared = dist * dist;
+				for (int i = 0; i < NUM_PREDATORS; i++) {
+					if (predatorActive[i] == 1.0) {
+						dir = predators[i] - selfPosition;
+						dir.z = 0.;
+						dist = length( dir );
+						distSquared = dist * dist;
 
-					if (dist < preyRadius) {
+						if (dist < preyRadius) {
 
-						f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-						velocity += normalize( dir ) * f;
-						limit += 5.0;
-					}
-				}
-
-				if (predator2active == 1.0) {
-					dir = predator2 - selfPosition;
-					dir.z = 0.;
-					dist = length( dir );
-					distSquared = dist * dist;
-
-					if (dist < preyRadius) {
-
-						f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-						velocity += normalize( dir ) * f;
-						limit += 5.0;
-					}
-				}
-
-				if (predator3active == 1.0) {
-					dir = predator3 - selfPosition;
-					dir.z = 0.;
-					dist = length( dir );
-					distSquared = dist * dist;
-
-					if (dist < preyRadius) {
-
-						f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-						velocity += normalize( dir ) * f;
-						limit += 5.0;
+							f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
+							velocity += normalize( dir ) * f;
+							limit += 5.0;
+						}
 					}
 				}
 
@@ -507,7 +478,7 @@
 
 			var PARTICLES = WIDTH * WIDTH;
 			var BOUNDS = 800, BOUNDS_HALF = BOUNDS / 2;
-			var NUM_PREDATORS = 3;
+			var NUM_PREDATORS = 20;
 
 			document.getElementById('birds').innerText = PARTICLES;
 
@@ -621,10 +592,7 @@
 			}
 
 
-			function loadPredatorModel(callback) {
-
-
-				var loader = new THREE.JSONLoader();
+			function loadPredatorModel(loader, callback) {
 
 				loader.load( "models/animated/flamingo.js", function( geometry ) {
 
@@ -665,87 +633,15 @@
 				light.position.set( 0.25, -1, 0 );
 				scene.add( light );
 
+				var loader = new THREE.JSONLoader();
 
-				loadPredatorModel(function(obj) {
-					obj.visible = false;
-					predators.push(obj);
-					scene.add(obj);
-				});
-				loadPredatorModel(function(obj) {
-					obj.visible = false;
-					predators.push(obj);
-					scene.add(obj);
-				});
-				loadPredatorModel(function(obj) {
-					obj.visible = false;
-					predators.push(obj);
-					scene.add(obj);
-				});
-
-/*
-				var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
-
-					console.log( item, loaded, total );
-
-				};
-
-				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'obj/Space_Invader.obj', function ( object ) {
-					object.traverse( function ( child ) {
-						if ( child instanceof THREE.Mesh ) {
-							child.material = new THREE.MeshBasicMaterial( { color: colors[0] } );
-						}
+				for (var i = 0; i < NUM_PREDATORS; i++) {
+					loadPredatorModel(loader, function(obj) {
+						obj.visible = false;
+						predators.push(obj);
+						scene.add(obj);
 					});
-					object.scale.x = object.scale.y = 0.5;
-					object.scale.z = 0.05;
-					object.updateMatrix();
-					scene.add(object);
-					predators.push(object);
-
-				});
-				loader.load( 'obj/Space_Invader.obj', function ( object ) {
-					object.traverse( function ( child ) {
-						if ( child instanceof THREE.Mesh ) {
-							child.material = new THREE.MeshBasicMaterial( { color: colors[1] } );
-						}
-					});
-					object.scale.x = object.scale.y = 0.5;
-					object.scale.z = 0.05;
-					object.updateMatrix();
-					scene.add(object);
-					predators.push(object);
-
-				});
-				loader.load( 'obj/Space_Invader.obj', function ( object ) {
-					object.traverse( function ( child ) {
-						if ( child instanceof THREE.Mesh ) {
-							child.material = new THREE.MeshBasicMaterial( { color: colors[2] } );
-						}
-					});
-					object.scale.x = object.scale.y = 0.5;
-					object.scale.z = 0.05;
-					object.updateMatrix();
-					scene.add(object);
-					predators.push(object);
-
-				});
-*/
-				/*
-				//var geometry = new THREE.SphereGeometry( 20, 20, 20 );
-
-				//var geometry = new THREE.BirdGeometry();
-
-				for (var ii = 0; ii < NUM_PREDATORS; ii++) {
-					var predatorObj = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colors[ii % colors.length]} ) );
-					//predatorObj.scale.x = predatorObj.scale.y = predatorObj.scale.z = 100.0;
-					//predatorObj.updateMatrix();
-					scene.add(predatorObj);
-					window.predators.push(predatorObj);
 				}
-
-				*/
-				
 			}
 
 
@@ -863,21 +759,13 @@
 
 				simulator.simulate( delta );
 
-				if (window.predators.length == NUM_PREDATORS) {
-					var p = window.predators[0].position;
-					simulator.velocityUniforms.predator1.value.set(p.x, p.y, p.z);
-					var p = window.predators[1].position;
-					simulator.velocityUniforms.predator2.value.set(p.x, p.y, p.z);
-					var p = window.predators[2].position;
-					simulator.velocityUniforms.predator3.value.set(p.x, p.y, p.z);
+				for (var i = 0; i < window.predators.length; i++) {
+					window.predators[i].updateAnimation( 1000 * delta );
+					var p = window.predators[i].position;
+					simulator.velocityUniforms.predators.value[i].set(p.x, p.y, p.z);
 				}
 
 				var delta = clock.getDelta();
-
-				for (var i = 0; i < window.predators.length; i++) {
-					predators[i].updateAnimation( 1000 * delta );
-				}
-
 
 				//mouseX = 10000;
 				//mouseY = 10000;
@@ -920,9 +808,8 @@ function clamp(s, in_min, in_max, out_min, out_max) {
         if (addr[1] == "orient") {
         	var user = addr[2];
         	if (user >= 1 && user <= NUM_PREDATORS) {
-        		if (user == 1) { window.simulator.velocityUniforms.predator1active.value = 1.0; }
-        		if (user == 2) { window.simulator.velocityUniforms.predator2active.value = 1.0; }
-        		if (user == 3) { window.simulator.velocityUniforms.predator3active.value = 1.0; }
+
+        		window.simulator.velocityUniforms.predatorActive.value[user-1] = 1.0;
 
         		window.predators[user-1].visible = true;
 
