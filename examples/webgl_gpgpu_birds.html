@@ -130,6 +130,9 @@
 			uniform float alignmentDistance; // 40
 			uniform float cohesionDistance; //
 			uniform float freedomFactor;
+			uniform float predator1active;
+			uniform float predator2active;
+			uniform float predator3active;
 			uniform vec3 predator1;
 			uniform vec3 predator2;
 			uniform vec3 predator3;
@@ -193,40 +196,46 @@
 
 				// move birds away from predators
 
-				dir = predator1 - selfPosition;
-				dir.z = 0.;
-				dist = length( dir );
-				distSquared = dist * dist;
+				if (predator1active == 1.0) {
+					dir = predator1 - selfPosition;
+					dir.z = 0.;
+					dist = length( dir );
+					distSquared = dist * dist;
 
-				if (dist < preyRadius) {
+					if (dist < preyRadius) {
 
-					f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-					velocity += normalize( dir ) * f;
-					limit += 5.0;
+						f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
+						velocity += normalize( dir ) * f;
+						limit += 5.0;
+					}
 				}
 
-				dir = predator2 - selfPosition;
-				dir.z = 0.;
-				dist = length( dir );
-				distSquared = dist * dist;
+				if (predator2active == 1.0) {
+					dir = predator2 - selfPosition;
+					dir.z = 0.;
+					dist = length( dir );
+					distSquared = dist * dist;
 
-				if (dist < preyRadius) {
+					if (dist < preyRadius) {
 
-					f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-					velocity += normalize( dir ) * f;
-					limit += 5.0;
+						f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
+						velocity += normalize( dir ) * f;
+						limit += 5.0;
+					}
 				}
 
-				dir = predator3 - selfPosition;
-				dir.z = 0.;
-				dist = length( dir );
-				distSquared = dist * dist;
+				if (predator3active == 1.0) {
+					dir = predator3 - selfPosition;
+					dir.z = 0.;
+					dist = length( dir );
+					distSquared = dist * dist;
 
-				if (dist < preyRadius) {
+					if (dist < preyRadius) {
 
-					f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
-					velocity += normalize( dir ) * f;
-					limit += 5.0;
+						f = ( distSquared / preyRadiusSq - 1.0 ) * delta * 100.;
+						velocity += normalize( dir ) * f;
+						limit += 5.0;
+					}
 				}
 
 				// if (testing == 0.0) {}
@@ -545,6 +554,8 @@
 				simulator = new SimulationRenderer(WIDTH, renderer);
 				simulator.init();
 
+				window.simulator = simulator;
+
 				stats = new Stats();
 				stats.domElement.style.position = 'absolute';
 				stats.domElement.style.top = '0px';
@@ -561,7 +572,7 @@
 
 
 
-				var gui = new dat.GUI();
+				//var gui = new dat.GUI();
 
 
 				var effectController = {
@@ -582,12 +593,12 @@
 
 				valuesChanger();
 
-
+/*
 				gui.add( effectController, "seperation", 0.0, 100.0, 1.0 ).onChange( valuesChanger );
 				gui.add( effectController, "alignment", 0.0, 100, 0.001 ).onChange( valuesChanger );
 				gui.add( effectController, "cohesion", 0.0, 100, 0.025 ).onChange( valuesChanger );
 				gui.close();
-
+*/
 				initBirds();
 				initPredators();
 			}
@@ -656,14 +667,17 @@
 
 
 				loadPredatorModel(function(obj) {
+					obj.visible = false;
 					predators.push(obj);
 					scene.add(obj);
 				});
 				loadPredatorModel(function(obj) {
+					obj.visible = false;
 					predators.push(obj);
 					scene.add(obj);
 				});
 				loadPredatorModel(function(obj) {
+					obj.visible = false;
 					predators.push(obj);
 					scene.add(obj);
 				});
@@ -906,6 +920,12 @@ function clamp(s, in_min, in_max, out_min, out_max) {
         if (addr[1] == "orient") {
         	var user = addr[2];
         	if (user >= 1 && user <= NUM_PREDATORS) {
+        		if (user == 1) { window.simulator.velocityUniforms.predator1active.value = 1.0; }
+        		if (user == 2) { window.simulator.velocityUniforms.predator2active.value = 1.0; }
+        		if (user == 3) { window.simulator.velocityUniforms.predator3active.value = 1.0; }
+
+        		window.predators[user-1].visible = true;
+
 		        window.predators[user-1].position.x = clamp(obj[3], -45, 45, -400, 400);
 		        window.predators[user-1].position.y = clamp(obj[2], -45, 45, -400, 400);
 
